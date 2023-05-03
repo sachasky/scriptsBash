@@ -1,0 +1,190 @@
+#!/bin/bash
+
+opc=-1
+admi=0
+
+altadeadministrativo(){
+
+if [ -f usuarios.txt ]
+then
+echo ""
+else
+> usuarios.txt
+fi
+
+cantidad=$(cut -d":" -f1 usuarios.txt | grep -c $2)
+if [ $cantidad -eq 0 ]
+then
+echo $2:$3:administrativo:$1>>usuarios.txt
+echo "El administrativo se ah creado";
+else
+echo "El nombre de administrativo ya existe"
+echo $(date +"%D %H:%m") "->Alta de administrativo cancelada nombre ya existe">>log.txt
+echo "Accion Cancelada"
+fi
+}
+
+bajadeadministrativo(){
+if [ $(grep -w $1 usuarios.txt | grep -wc administrativo) == "1" ]
+then
+sed -i '/'"$1"'/d' usuarios.txt
+
+echo "Se elimino"
+else
+echo "El administrativo no existe"
+echo $(date +"%D %H:%m") "->Baja de administrativo cancelada nombre no existe">>log.txt
+fi
+
+}
+
+modificacionadministrativo(){
+linea=$(grep -n $1 usuarios.txt | cut -d":" -f1)
+
+
+if [ "$(cut -d":" -f1 usuarios.txt | grep -wc $1)" -eq "0" ]
+then
+echo "El administrativo que desea modificar no existe "
+echo $(date +"%D %H:%m") "->Modificacion de admi cancelada El administrativo no existe">>log.txt
+elif [ "$(cut -d":" -f2 usuarios.txt | grep -c $contrasenia)" -eq  "0" ]
+then
+echo "La contrasena o el administrativo esta mal"
+echo $(date +"%D %H:%m") "->Modificacion de administrativo Cancelada la contrasena o el admi esta mal">>log.txt
+else
+
+
+echo "que desea modificar"
+while [ "$opc" != "0" ]
+do
+echo "1)Nombre"
+echo "0)Salir"
+echo "Ingrese opcion"
+
+read opc
+
+case $opc in
+
+1)
+echo "Ingrese nuevo nombre"
+read nombre
+if [ $(cut -d":" -f1 usuarios.txt | grep -c $nombre) != "0" ]
+then
+echo "El nuevo nombre ya existe"
+echo $(date +"%D %H:%m") "->Modificacion de admi Cancelada El nuevo nombre ya existe">>log.txt
+else
+sed -i ''"$linea"' s/'"$1"'/'"$nombre"'/' usuarios.txt
+echo "El nombre fue modificado"
+fi
+;;
+
+0)
+;;
+*)
+echo "Opcion incorrecta"
+;;
+esac
+done
+opc=-1;
+fi
+
+}
+
+while [ "$opc" != "0" ]
+do
+echo "1) Alta de Administrativo"
+echo "2) Baja de Administrativo"
+echo "3) Modificar datos de un administrativo"
+echo "4) Listar administrativos"
+echo "5) Buscar administrativos"
+echo "6) Listar clientes"
+echo "7) Buscar cliente"
+echo "0) Cancelar";
+echo ""
+echo "Ingrese una opcion";
+read opc
+case $opc in
+
+1)
+echo "Ingrese Nombre de administrativo"
+read nombre
+echo "Ingrese cedula "
+read ci
+echo "Ingrese una contrasena"
+read contrasenia
+
+altadeadministrativo $ci $nombre $contrasenia 
+;;
+
+2)
+echo "Ingrese nombre de administrativo  a eliminar"
+read nombre
+bajadeadministrativo $nombre
+;;
+
+3)
+echo "Modificar datos de administrativo"
+echo "Ingrese nombre de administrativo a modificar"
+read nombre
+echo "Ingrese la contrasena"
+read contrasenia
+modificacionadministrativo $nombre $contrasenia
+;;
+
+4)
+echo "Listado de administrativo"
+echo ""
+cut -d":" -f1,3,3 usuarios.txt
+echo ""
+;;
+
+5)
+buscaradministrativo(){
+
+if [ "$(cut -d":" -f1 usuarios.txt | grep -wc $ci)" -eq "0" ]
+then
+echo "El nombre del administrativo no existe"
+else
+cut -d":" -f1,2,3 usuarios.txt | grep ^"$ci" usuarios.txt 
+fi
+}
+echo "Buscar administrativo"
+echo " "
+echo "Ingrese nombre del administrativo"
+read ci
+buscaradministrativo $ci
+;;
+
+6)
+echo "Listado de los clientes"
+echo " "
+cut -d":" -f1,2,3,4 clientes.txt
+echo " "
+;;
+
+7)
+buscarcliente(){
+
+if [ "$(cut -d":" -f1 clientes.txt | grep -wc $1)" -eq "0" ]
+then
+echo "El documento del cliente no existe"
+echo $(date +"%D %H:%m") "->Buscar cliente cancelado El documento del cliente no existe">>log.txt
+else
+cut -d":" -f1,2,3,4 clientes.txt | grep ^"$ci" clientes.txt
+fi
+}
+echo "Buscar cliente"
+echo " "
+echo "Ingrese el documento del cliente"
+read ci
+buscarcliente $ci
+;;
+
+0)
+echo " Salio correctamente"
+;;
+
+*)
+echo " " "Opcion incorrecta"
+echo " "
+;;
+esac
+done
