@@ -1,0 +1,210 @@
+#!/bin/bash
+
+opc=-1;
+tipoDeUsuario=nada;
+usu=0;
+
+bajaDeUsu(){
+linea=$(grep -nw $1 usuarios.txt | cut -d":" -f1)
+#echo $linea
+if [ $(cut -d":" -f1 usuarios.txt | grep -wc $1) == "1" ]
+then
+sed -i ''"$linea"'d' usuarios.txt
+echo "Se elimino"
+else
+echo "El usuario no existe"
+echo $(date +"%D %H:%m") "->El usuario a eliminar NO existe">>log.txt
+fi
+}
+
+altaDeUsuario(){
+
+cantidad=$(cut -d":" -f1 usuarios.txt | grep -wc $1)
+if [ $cantidad -eq 0 ]
+then
+echo $1:$2:$3:$4>>usuarios.txt
+echo "El usuario ah sido creado";
+else
+echo "el Nombre de usuario ya existe"
+echo $(date +"%D %H:%m") "->Alta de Usuario Canselada Nombre Ya exite">>log.txt
+echo "Accion Cancelada"
+fi
+}
+
+modificacionDeUsu(){
+
+linea=$(grep -nw $1 usuarios.txt | cut -d":" -f1)
+
+if [ "$(cut -d":" -f1 usuarios.txt | grep -wc $1)" -eq "0" ]
+then
+echo "El usuario a modificar NO existe "
+echo $(date +"%D %H:%m") "->El usuario a Modifiar No Existe">>log.txt
+else
+#grep $1 usuarios.txt
+
+echo "que decea modificar"
+while [ "$opc" != "0" ] && [ "$opc" != "1" ]
+do
+echo "1)Tipo de usuario"
+echo "0)Salir"
+echo "ingrese opcion"
+
+read opc
+
+case $opc in
+1)
+echo "ingrese nuevo tipo de usuario"
+while [ "$usu" != "1" ] && [ "$usu" != "2" ] && [ "$usu" != "3" ]
+do
+echo "1) Administrador"
+echo "2) Administrativo"
+echo "3) Gerente";
+echo ""
+read usu
+case $usu in
+1)
+tipoDeUsuario=administrador;
+;;
+2)
+tipoDeUsuario=administrativo;
+;;
+3)
+tipoDeUsuario=gerente;
+;;
+*)
+echo "Opcion incorrecta"
+esac
+done
+usu=0
+sed -i ''"$linea"' s/'"$(grep -w $1 usuarios.txt | cut -d":" -f3)"'/'"$tipoDeUsuario"'/' usuarios.txt
+echo "El tipo de Usuario se a modificado"
+;;
+0)
+;;
+*)
+echo "Opcion Incorecta"
+;;
+esac
+done
+opc=-1;
+fi
+
+}
+
+while [ "$opc" != "0" ]
+do
+echo "1) Alta de Usuario"
+echo "2) Baja de usuario"
+echo "3) Modificar datos de usuarios"
+echo "4) Listar Usaurios"
+echo "5) Buscar datos de usaurio"
+echo "6) Ver registro de errores"
+echo "7) Ver informacion del sistema"
+echo "8) Respaldar datos"
+echo "0) Cancelar";
+echo ""
+echo "Ingrese una opcion";
+read opc
+
+case $opc in
+
+1)
+echo "Ingrese Nombre de usuario"
+read nombre
+echo "ingrese una contraseña "
+read contrasenia
+while [ "$usu" != "1" ] && [ "$usu" != "2" ] && [ "$usu" != "3" ]
+do
+echo "1) Administrador"
+echo "2) Administrativo"
+echo "3) Gerente"
+echo ""
+echo "Ingrese Tipo de Usuario"
+read usu
+case $usu in
+1)
+tipoDeUsuario=administrador;
+;;
+2)
+tipoDeUsuario=administrativo;
+;;
+3)
+tipoDeUsuario=gerente;
+;;
+*)
+echo "Opcion incorrecta"
+esac
+done
+usu=0
+echo "Ingrese cedula de identidad"
+read ci
+if [ $nombre = "administrador" ] || [ $nombre = "administrativo" ] || [ $nombre = "gerente" ]
+then
+echo "El Nombre No puese Ser un Tipo de Usuario"
+echo $(date +"%D %H:%m") "->El Nombre De Usaurio Es Igual a un Tipo de usuario">>log.txt
+else
+altaDeUsuario $nombre $contrasenia $tipoDeUsuario $ci
+fi
+;;
+2)
+echo "Ingrese nombre de usuario a Eliminar"
+read nombre
+bajaDeUsu $nombre
+;;
+3)
+echo "Modificar datos de Usarios"
+echo "ingrese nombre de Usaurio a modificar"
+read nombre
+modificacionDeUsu $nombre
+;;
+4)
+echo "Listado de usuarios"
+echo ""
+cut -d":" -f1,3,4 usuarios.txt
+echo ""
+;;
+5)
+echo "Ingrese Nombre de usuario al que se le decean ver Los datos "
+read nombre
+if [ $(cat -d":" -f1 usuarios.txt | grep -wc $nombre) =="0" ]
+then
+cat -d":" -f1,3,4 usuarios.txt | grep -w $nombre
+else
+echo "El nombre de Usuario a buscar es Incorrecto"
+echo $(date +"%D %H:%m") "->El usuario a Buscar No Existe">>log.txt
+fi
+;;
+6)
+echo "Registro de Errores"
+cat log.txt
+;;
+7)
+echo "Cantidad de Errores del sistema"
+wc -l log.txt | cut -d" " -f1
+echo ""
+echo "Canridad de usuarios del sistema"
+wc -l usuarios.txt | cut -d" " -f1
+echo ""
+echo "Cantidad de Clientes del sistema"
+wc -l clientes.txt | cut -d" " -f1
+;;
+8)
+echo "Ingrese destino de repaldo de Datos"
+read destino
+if [ -d "$destino" ]
+then
+cp ./log.txt $destino
+cp ./usuarios.txt $destino
+cp ./clientes.txt $destino
+else
+echo "El destino del respaldo no existe"
+echo $(date +"%D %H:%m") "->El destino del Respaldo no existe">>log.txt
+fi
+;;
+0)
+;;
+*)
+echo "Opcion incorrecta"
+;;
+esac
+done

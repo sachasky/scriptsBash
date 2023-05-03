@@ -1,0 +1,81 @@
+#!/bin/bash
+chmod u+x ./Administrador.sh
+chmod u+x ./administrativo.sh
+chmod u+x ./gerente.sh
+
+if [ -f clientes.txt ]
+then
+echo ""
+else
+touch clientes.txt
+fi
+
+if [ -f usuarios.txt ]
+then
+echo ""
+else
+touch usuarios.txt
+fi
+
+IniciarSecion(){
+opc=-1;
+while [ "$opc" != "0" ]
+do
+echo "1) Inicair Secion "
+echo "0) Salir"
+echo "ingrese Una opcion"
+read opc
+case $opc in
+1)
+echo "ingrese nombre de usuario"
+read nombre
+echo "ingrese contraseña de usuario"
+read contrasenia
+if [ $(cut -d":" -f1,2 usuarios.txt | grep -w $nombre | grep -wc $contrasenia) = "1" ]
+then
+if [ $(cut -d":" -f1,3 usuarios.txt | grep -w $nombre | grep -wc administrador) = "1" ]
+then
+./Administrador.sh
+elif [ $(cut -d":" -f1,3 usuarios.txt | grep -w $nombre | grep -wc administrativo) = "1" ]
+then
+./administrativo.sh
+else
+./gerente.sh
+fi
+else
+echo "EL usaurio no existe o La contraseña es Incorrecta"
+echo $(date +"%D %H:%m") "->El Usuario No Existe o Su contraseña es Incorrecta">>log.txt
+fi
+;;
+0)
+echo "Cerrando Sistema..."
+;;
+*)
+echo "Opcion incorrecta"
+;;
+esac
+done
+
+}
+
+
+if [ -s usuarios.txt ]
+then
+
+IniciarSecion
+
+else
+echo "Ingrese Nombre de usuario"
+read nombre
+echo "ingrese una contraseña "
+read contrasenia
+
+tipoDeUsuario=administrador;
+
+echo "Ingrese cedula de identidad"
+read ci
+
+echo $nombre:$contrasenia:$tipoDeUsuario:$ci>>usuarios.txt
+echo "El usuario ah sido creado"
+IniciarSecion
+fi

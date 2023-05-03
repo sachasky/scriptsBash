@@ -1,0 +1,196 @@
+#!/bin/bash
+opc=-1;
+cli=0;
+
+AltaCliente(){
+cantidad=$(cut -d":" -f1 clientes.txt | grep -c $1)
+if [ $cantidad -eq 0 ]
+    then
+echo $1:$2:$3:$4>>clientes.txt
+echo "El cliente fue creado con exito";
+    else
+echo $(date +"%D %H:%m") "->El nombre del cliente ya existe">>log.txt;
+echo "Accion Cancelada";
+fi
+}
+ModiCliente(){
+modif=$(grep -n $1 clientes.txt | cut -d":" -f1)
+if [ "$(cut -d":" -f2 clientes.txt | grep -wc $1)" -eq "0" ]
+then
+echo "El Nombre del cliente a modificar No existe"
+echo " "
+echo $(date +"%D %H:%m") "->El nombre del cliente NO existe">>log.txt
+
+elif [ "$(cut -d":" -f3 clientes.txt | grep -wc $2)" -eq  "0" ]
+then
+echo "El apellido o el nombre del cliente esta mal"
+echo $(date +"%D %H:%m") "->Modificacion del cliente fue Cancelada la apellido O el Nombre esta mal">>log.txt
+else
+echo "Que decea modificar"
+while [ "$opc" != "0" ]
+do
+echo "1) Nombre"
+echo "2) Apellido"
+echo "3) Mascota"
+echo "0)Salir"
+echo "Ingrese Opcion"
+
+read opc
+case $opc in
+1)
+echo "Ingrese nuevo nombre del cliente"
+read cli
+if [ $(cut -d":" -f2 clientes.txt | grep -c $cli) != "0" ]
+then
+echo "El nuevo nombre ya existe"
+echo $(date +"%D %H:%m") "->Modificacion Cancelada - El nuevo nombre ya existe">>log.txt
+else
+sed -i ''"$modif"' s/'"$1"'/'"$cli"'/' clientes.txt
+echo "El nombre se modificó"
+fi
+;;
+
+2)
+echo "Ingrese nuevo apellido"
+read apellido
+if [ $(cut -d":" -f3 clientes.txt | grep -c $apellido) != "0" ]
+then
+echo "El nuevo nombre ya existe"
+echo $(date +"%D %H:%m") "->Modificacion Cancelada - El nuevo apellido ya existe">>log.txt
+else
+sed -i ''"$modif"' s/'"$2"'/'"$apellido"'/' clientes.txt
+echo "El apellido se modificó"
+fi
+;;
+
+3)
+echo "Ingrese nombre de la mascota"
+read nomMascota
+if [ $(cut -d":" -f4 clientes.txt | grep -c $nomMascota) != "0" ]
+then
+echo "La nueva mascota ya existe"
+echo $(date +"%D %H:%m") "->Modificacion Cancelada - El nuevo nombre de la mascota ya existe">>log.txt
+else
+sed -i ''"$modif"' s/'"$3"'/'"$nomMascota"'/' clientes.txt
+echo "El nombre de la mascota se modificó"
+fi
+;;
+
+0)
+echo "Salir"
+;;
+*)
+echo "Opcion Incorecta"
+;;
+esac
+done
+opc=-1;
+fi
+
+}
+
+while [ "$opc" != "0" ]
+do
+echo " "
+echo "1) Alta de cliente";
+echo "2) Baja de cliente";
+echo "3) Modificaion de cliente";
+echo "4) Listar clientes";
+echo "5) Bucar clientes";
+echo "0) Cancelar";
+echo ""
+echo "Ingrese una opcion";
+
+read opc
+case $opc in
+
+1)
+echo "Ingrese cedula del identidad"
+read ci
+
+echo "Ingrese nombre del cliente"
+read cli
+
+echo "Ingrese apellido del cliente"
+read apellido
+
+echo "Ingrese el nombre de la mascota"
+read nomMascota
+
+
+
+AltaCliente $ci $cli $apellido $nomMascota
+;;
+
+2)
+BajaCliente(){
+
+if [ $(cut -d":" -f1  clientes.txt | grep -wc $1) == "1" ]
+then
+sed -i '/'"$1"'/d' clientes.txt
+echo "El cliente fue eliminado"
+
+else
+echo "El clientes no existe o Ingreso mal el documento"
+echo $(date +"%D %H:%m") "->La baja del cliente fue Cancelada - El documento no existe">>log.txt
+fi
+}
+
+echo "Ingrese el documento del cliente a eliminar"
+read ci
+
+BajaCliente $ci
+;;
+
+3)
+echo "Modificacion de datos del cliente"
+echo " "
+
+echo "Ingrese el nombre del cliente a modificar"
+read cli
+
+echo "Ingrese apellido del cliente a modificar"
+read apellido
+
+echo "Ingrese el nombre de la mascota del cliente a modificar"
+read nomMascota
+
+ModiCliente $cli $apellido $nomMascota
+;;
+
+4)
+echo "Listado de los clientes"
+echo " "
+cut -d":" -f1,2,3,4 clientes.txt
+echo " "
+;;
+
+5)
+BuscarCliente(){
+
+if [ "$(cut -d":" -f1 clientes.txt | grep -wc $1)" -eq "0" ]
+then
+echo "El documento del cliente no existe"
+else
+cut -d":" -f1,2,3,4 clientes.txt | grep ^"$ci" clientes.txt
+fi
+}
+
+echo "Buscar cliente"
+echo " "
+echo "Ingrese el documento del cliente"
+read ci
+
+BuscarCliente $ci
+;;
+
+0)echo "SALIR"
+;;
+
+*)
+echo " " "Opcion incorrecta"
+echo " "
+;;
+
+esac
+done
